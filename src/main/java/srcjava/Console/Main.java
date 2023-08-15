@@ -1,4 +1,4 @@
-package srcjava/Console
+package srcjava.Console;
 
 import java.util.Arrays;
 import java.util.List;
