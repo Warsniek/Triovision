@@ -6,111 +6,102 @@ import java.util.List;
 import java.util.Scanner;
 
 public class Game {
+    private Board board;
+    private List<Player> players;
+    private Deck deck;
+    private List<Card> exposedCards;
 
-    private Pions pions;
-    private Plateau plateau;
-    private List<Cartes> cartes;
+    public Game(int boardSize, List<String> playerNames, List<String> playerColors) {
+        board = new Board(boardSize);
+        players = new ArrayList<>();
+        deck = new Deck();
+        exposedCards = new ArrayList<>();
 
-    public Game() {
-        pions = new Pions();
-        plateau = new Plateau();
-        cartes = new ArrayList<>();
-        initialiserCartes();
-    }
+        for (int i = 0; i < 12; i++) {
+            Card card = deck.drawCard();
+            exposedCards.add(card);
+        }
 
-    // Initialiser les cartes du jeu
-    private void initialiserCartes() {
-        cartes.add(new Cartes("Carte1", Pions.Couleur.BLEU, Pions.Couleur.ROUGE, Pions.Couleur.VERT));
-        cartes.add(new Cartes("Carte2", Pions.Couleur.VERT, Pions.Couleur.JAUNE, Pions.Couleur.BLEU));
-        cartes.add(new Cartes("Carte3", Pions.Couleur.ROUGE, Pions.Couleur.VERT, Pions.Couleur.JAUNE));
-        //plus de carte?
-    }
-
-    // Mélanger les cartes
-    private void melangerCartes() {
-        Collections.shuffle(cartes);
-    }
-
-    // Afficher les cartes exposées
-    private void afficherCartesExposees() {
-        System.out.println("Cartes exposées :");
-        for (int i = 0; i < cartes.size(); i++) {
-            System.out.println((i + 1) + ". " + cartes.get(i).getNom());
+        for (int i = 0; i < playerNames.size(); i++) {
+            Player player = new Player(playerNames.get(i), playerColors.get(i));
+            players.add(player);
         }
     }
 
-    // Jouer une partie
-    public void jouerPartie() {
-        System.out.println("Bienvenue dans Triovision !");
-        Scanner scanner = new Scanner(System.in);
 
-        int tourActuel = 1;
+    public void initialize() {
+        deck.shuffle();
+        drawInitialExposedCards();
+        displayInitialSetup();
+    }
 
-        while (tourActuel <= NOMBRE_DE_TOURS) {
-            melangerCartes();
-            afficherCartesExposees();
-
-            System.out.print("Entrez le numéro de la carte que vous souhaitez reproduire : ");
-            int numeroCarte = scanner.nextInt();
-
-            if (numeroCarte >= 1 && numeroCarte <= cartes.size()) {
-                Carte carteEnCours = cartes.get(numeroCarte - 1);
-                System.out.println("Carte en cours : " + carteEnCours.getNom());
-
-                // Afficher le plateau initial avant le déplacement des pions
-                plateau.afficherPlateau();
-
-                System.out.print("Entrez la position du pion à déplacer : ");
-                int positionDepart = scanner.nextInt();
-                System.out.print("Entrez la nouvelle position du pion : ");
-                int positionArrivee = scanner.nextInt();
-
-                plateau.placerPion(positionArrivee, plateau.getPionsSurPlateau()[positionDepart - 1]);
-
-                if (carteEnCours.estGagnante(plateau.getPionsSurPlateau())) {
-                    System.out.println("Bravo ! Vous avez gagné la carte " + carteEnCours.getNom() + ".");
-                    cartes.remove(carteEnCours);
-                } else {
-                    System.out.println("Désolé, la carte n'a pas été reproduite correctement.");
-                    // Remettre le pion à sa position d'origine
-                    plateau.placerPion(positionDepart, plateau.getPionsSurPlateau()[positionArrivee - 1]);
-                }
-
-
-                // Afficher le plateau initial avant le déplacement des pions
-                plateau.afficherPlateau();
-
-                System.out.print("Entrez la position du pion à déplacer : ");
-                int positionDepart = scanner.nextInt();
-                System.out.print("Entrez la nouvelle position du pion : ");
-                int positionArrivee = scanner.nextInt();
-
-                plateau.placerPion(positionArrivee, plateau.getPionsSurPlateau()[positionDepart - 1]);
-
-                if (carteEnCours.estGagnante(plateau.getPionsSurPlateau())) {
-                    System.out.println("Bravo ! Vous avez gagné la carte " + carteEnCours.getNom() + ".");
-                    cartes.remove(carteEnCours);
-                } else {
-                    System.out.println("Désolé, la carte n'a pas été reproduite correctement.");
-                    // Remettre le pion à sa position d'origine
-                    plateau.placerPion(positionDepart, plateau.getPionsSurPlateau()[positionArrivee - 1]);
-                }
-
-                // Afficher le plateau après le déplacement des pions
-                plateau.afficherPlateau();
-            } else {
-                System.out.println("Numéro de carte invalide.");
+    private void drawInitialExposedCards() {
+        for (int i = 0; i < 12; i++) {
+            Card card = deck.drawCard();
+            if (card != null) {
+                exposedCards.add(card);
             }
+        }
+    }
 
-            System.out.println();
+    private void displayInitialSetup() {
+        System.out.println("Initial game setup:");
+        for (int i = 0; i < 12; i++) {
+            System.out.println("Exposed Card " + (i + 1) + ": " + exposedCards.get(i).toString());
+        }
+    }
+
+    public void play() {
+        initialize();
+
+        while (!isGameOver()) {
+            for (Player player : players) {
+                player.takeTurn(board);
+                if (isGameOver()) {
+                    displayFinalScores();
+                    return;
+                }
+            }
+        }
+    }
+
+    public boolean isGameOver() {
+        return deck.isEmpty() || exposedCards.isEmpty();
+    }
+
+    public void displayFinalScores() {
+        List<Player> winners = determineWinners();
+
+        System.out.println("Final scores:");
+        for (Player player : players) {
+            System.out.println(player.getName() + " - Score: " + player.getTotalScore());
         }
 
-        System.out.println("Fin de la partie !");
-        System.out.println("Vous avez gagné " + (cartes.size() == 0 ? "toutes les cartes !" : cartes.size() + " carte(s)."));
+        if (winners.size() == 1) {
+            System.out.println("Winner: " + winners.get(0).getName());
+        } else {
+            System.out.println("It's a tie between:");
+            for (Player winner : winners) {
+                System.out.println(winner.getName());
+            }
+        }
     }
 
-    public static void main(String[] args) {
-        Game jeu = new Game();
-        jeu.jouerPartie();
+    private List<Player> determineWinners() {
+        List<Player> winners = new ArrayList<>();
+        int highestScore = -1;
+
+        for (Player player : players) {
+            if (player.getTotalScore() > highestScore) {
+                highestScore = player.getTotalScore();
+                winners.clear();
+                winners.add(player);
+            } else if (player.getTotalScore() == highestScore) {
+                winners.add(player);
+            }
+        }
+
+        return winners;
     }
+
 }
