@@ -1,40 +1,41 @@
-package srcjava.Console;
+package srcjava.Trio;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Scanner;
 
 public class Game {
-    private Board board;
-    private List<Player> players;
-    private Deck deck;
-    private List<Card> exposedCards;
+    private Board board; //plateau
+    private List<Player> players; //joueurs differnets
+    private Deck deck;//deck des cartes
+    private List<Card> exposedCards; //cartes retournées
 
+
+    //constructeur
     public Game(int boardSize, List<String> playerNames, List<String> playerColors) {
         board = new Board(boardSize);
         players = new ArrayList<>();
         deck = new Deck();
         exposedCards = new ArrayList<>();
 
+        //pioche 12 cartes pour les exposer
         for (int i = 0; i < 12; i++) {
             Card card = deck.drawCard();
             exposedCards.add(card);
         }
-
+//création des différents players
         for (int i = 0; i < playerNames.size(); i++) {
             Player player = new Player(playerNames.get(i), playerColors.get(i));
             players.add(player);
         }
     }
 
-
+//initialise le jeu
     public void initialize() {
         deck.shuffle();
         drawInitialExposedCards();
         displayInitialSetup();
     }
-
+//pioche les cartes
     private void drawInitialExposedCards() {
         for (int i = 0; i < 12; i++) {
             Card card = deck.drawCard();
@@ -43,7 +44,7 @@ public class Game {
             }
         }
     }
-
+//affiche le debut de la partie avec toutes les initialisations
     private void displayInitialSetup() {
         System.out.println("Initial game setup:");
         for (int i = 0; i < 12; i++) {
@@ -52,8 +53,9 @@ public class Game {
     }
 
     public void play() {
-        initialize();
-
+        initialize(); //initialisation du jeu
+//continu jusqu'a ce que le jeu soit fini
+        //boucle d'avancement qui exécute les check, scores finaux, les gaganats ou s'il y a une égalité
         while (!isGameOver()) {
             for (Player player : players) {
                 player.takeTurn(board);
@@ -65,6 +67,8 @@ public class Game {
         }
     }
 
+
+//check si le jeu est bien fini
     public boolean isGameOver() {
         return deck.isEmpty() || exposedCards.isEmpty();
     }

@@ -1,7 +1,7 @@
-package srcjava.Console;
+package srcjava.Trio;
 
 public class Card {
-    private String[][] layout;
+    private String[][] layout; //matrice de la carte
 
     public Card(String[][] layout) {
         this.layout = layout;
@@ -9,8 +9,10 @@ public class Card {
 
     public String[][] getLayout() {
         return layout;
-    }
+    } //permet de recuperer la postion de la carte et renvoie sa position
 
+
+    //genere des cartes a la suite
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -20,7 +22,7 @@ public class Card {
             }
             sb.append("\n");
         }
-        return sb.toString();
+        return sb.toString(); //renvoie la chaine generée
     }
 }
 
